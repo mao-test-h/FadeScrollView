@@ -28,11 +28,19 @@ namespace MyContents.Samples
             var imageMatInstance = new Material(this._imageMaterial);
             var textMatInstance = new Material(this._textMaterial);
 
-            // ScrollRectの中心座標をマテリアルに設定
-            var localPos = this.transform.localPosition;
-            int materialID_Center = Shader.PropertyToID("_Center");
-            imageMatInstance.SetVector(materialID_Center, localPos);
-            textMatInstance.SetVector(materialID_Center, localPos);
+            var myTrs = (RectTransform)this.transform;
+            var pos = myTrs.localPosition;
+            var halfSize = myTrs.sizeDelta / 2;
+
+            // フェードの境界をマテリアルに設定
+            int materialID_Border = Shader.PropertyToID("_Border");
+            var border = new Vector4(
+                pos.y + halfSize.y,    // top
+                pos.y - halfSize.y,    // bottom
+                pos.x + halfSize.x,    // left
+                pos.x - halfSize.x);   // right
+            imageMatInstance.SetVector(materialID_Border, border);
+            textMatInstance.SetVector(materialID_Border, border);
 
             for(int i = 0; i < this._createNum; ++i)
             {

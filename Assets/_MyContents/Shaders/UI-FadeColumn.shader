@@ -22,10 +22,15 @@ Shader "Custom/UI/FadeColumn"
 
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
 
-        // ScrollRectの中心座標
-        [HideInInspector] _Center ("Center", Vector) = (0.0, 0.0, 0.0, 0.0)
+
+        // フェードの境界(top, bottom, left, right)
+        [HideInInspector] _Border ("_Border", Vector) = (0.0, 0.0, 0.0, 0.0)
         // フェードの影響度
         _FadeIntensity ("Fade Intensity", Float) = 0.01
+        // 縦ラインのフェードの有効化
+        [Toggle(FADE_VERTICAL)] _OnFadeVertical ("On Fade Vertical", Float) = 0
+        // 横ラインのフェードの有効化
+        [Toggle(FADE_HORIZONTAL)] __OnFadeHorizontal ("On Fade Horizontal", Float) = 0
     }
 
     SubShader
@@ -68,6 +73,8 @@ Shader "Custom/UI/FadeColumn"
 
             #pragma multi_compile __ UNITY_UI_CLIP_RECT
             #pragma multi_compile __ UNITY_UI_ALPHACLIP
+            #pragma multi_compile __ FADE_VERTICAL
+            #pragma multi_compile __ FADE_HORIZONTAL
 
             struct appdata_t
             {
@@ -90,9 +97,6 @@ Shader "Custom/UI/FadeColumn"
             fixed4 _TextureSampleAdd;
             float4 _ClipRect;
 
-            float4 _Center;
-            float _FadeIntensity;
-
             v2f vert(appdata_t v)
             {
                 v2f OUT;
@@ -108,14 +112,35 @@ Shader "Custom/UI/FadeColumn"
             }
 
             sampler2D _MainTex;
+            float4 _Border;
+            float _FadeIntensity;
 
             fixed4 frag(v2f IN) : SV_Target
             {
                 half4 color = (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd) * IN.color;
 
-                // ScrollRectの中心座標から離れるに連れて薄くしていく
-                float4 offset = IN.worldPosition - _Center;
-                color.a += abs(offset.y) * (_FadeIntensity * -1.0);
+                // 境界の中央の算出
+                float2 center = float2(lerp(_Border.z, _Border.w, 0.5), lerp(_Border.x, _Border.y, 0.5));
+
+                // 境界の中央から離れるに連れて薄くしていく
+                #if FADE_VERTICAL
+                if(IN.worldPosition.y >= center.y || IN.worldPosition.y < center.y)
+                {
+                    // 縦ライン
+                    float scaleY = (_Border.x - _Border.y) / 2.0;
+                    float offsetY = IN.worldPosition.y - center.y;
+                    color.a -= ((abs(offsetY) / scaleY)) * _FadeIntensity;
+                }
+                #endif
+                #if FADE_HORIZONTAL
+                if(IN.worldPosition.x >= center.x || IN.worldPosition.x < center.x)
+                {
+                    // 横ライン
+                    float scaleX = (_Border.z - _Border.w) / 2.0;
+                    float offsetX = IN.worldPosition.x - center.x;
+                    color.a -= ((abs(offsetX) / scaleX)) * _FadeIntensity;
+                }
+                #endif
 
                 #ifdef UNITY_UI_CLIP_RECT
                 color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
