@@ -2,8 +2,14 @@
 
 // uGUIのScrollViewに於ける要素の透過処理を行うためのシェーダー
 // # Usage
-// - "_Center"にはScrollRectの中心座標を入れること
-// - "_FadeIntensity"は任意で設定
+// 
+// - "_Border"にはScrollRectの矩形サイズ(フェードの境界)を設定
+// - "_FadeIntensity"はフェードの影響度。任意の値を設定
+// 
+// - 縦ラインのフェードを有効化する場合には"_OnFadeVertical"をtrueに設定
+// - 横ラインのフェードを有効化する場合には"_OnFadeHorizontal"をtrueに設定
+//     - ※両方適用することも可能
+// 
 // - 後はScrollRectの要素にこれを適用したMaterialを設定
 Shader "Custom/UI/FadeColumn"
 {
@@ -30,7 +36,7 @@ Shader "Custom/UI/FadeColumn"
         // 縦ラインのフェードの有効化
         [Toggle(FADE_VERTICAL)] _OnFadeVertical ("On Fade Vertical", Float) = 0
         // 横ラインのフェードの有効化
-        [Toggle(FADE_HORIZONTAL)] __OnFadeHorizontal ("On Fade Horizontal", Float) = 0
+        [Toggle(FADE_HORIZONTAL)] _OnFadeHorizontal ("On Fade Horizontal", Float) = 0
     }
 
     SubShader
